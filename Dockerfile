@@ -164,7 +164,7 @@ RUN \
   ;
 
 # Build stage for media libraries (libvips, ffmpeg)
-FROM ${BASE_REGISTRY}/ruby:${RUBY_VERSION}-slim-${DEBIAN_VERSION} AS media-build
+FROM ruby AS media-build
 
 ARG TARGETPLATFORM
 
@@ -175,7 +175,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-o", "errexit", "-c"]
 RUN \
   --mount=type=cache,id=apt-native-cache-${TARGETPLATFORM},target=/var/cache/apt,sharing=locked \
   --mount=type=cache,id=apt-native-lib-${TARGETPLATFORM},target=/var/lib/apt,sharing=locked \
-  --mount=type=secret,id=firewall_root_ca,required=false \
   # Remove automatic apt cache Docker cleanup scripts
   rm -f /etc/apt/apt.conf.d/docker-clean; \
   # Install build tools for native libraries
@@ -184,7 +183,6 @@ RUN \
   autoconf \
   automake \
   build-essential \
-  ca-certificates \
   libtool \
   meson \
   nasm \
@@ -214,11 +212,7 @@ RUN \
   libvpx-dev \
   libx264-dev \
   libx265-dev \
-  ; \
-  if [ -f /run/secrets/firewall_root_ca ]; then \
-    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/custom-root-ca.crt; \
-    update-ca-certificates; \
-  fi;
+  ;
 
 # Create temporary libvips specific build layer
 FROM media-build AS libvips

@@ -15,8 +15,10 @@ jobs:
 
       - name: Prepare firewall root CA
         run: |
-          install -m 0644 /var/lib/actions-firewall/rootCA.pem "${RUNNER_TEMP}/rootCA.pem" \
-            || sudo install -m 0644 /var/lib/actions-firewall/rootCA.pem "${RUNNER_TEMP}/rootCA.pem"
+          source_ca=/var/lib/actions-firewall/rootCA.pem
+          target_ca="${RUNNER_TEMP}/rootCA.pem"
+          install -m 0644 "${source_ca}" "${target_ca}" \
+            || sudo install -m 0644 "${source_ca}" "${target_ca}"
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
