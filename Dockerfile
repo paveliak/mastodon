@@ -68,6 +68,9 @@ ENV \
   RAILS_ENV="production" \
   DEBIAN_FRONTEND="noninteractive" \
   PATH="${PATH}:/opt/ruby/bin:/opt/mastodon/bin" \
+  SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt" \
+  BUNDLE_SSL_CA_CERT="/etc/ssl/certs/ca-certificates.crt" \
+  NODE_EXTRA_CA_CERTS="/etc/ssl/certs/ca-certificates.crt" \
   MALLOC_CONF="narenas:2,background_thread:true,thp:never,dirty_decay_ms:1000,muzzy_decay_ms:0" \
   MASTODON_SIDEKIQ_READY_FILENAME=sidekiq_process_has_started_and_will_begin_processing_jobs
 
@@ -97,11 +100,13 @@ RUN \
   # Mount Apt cache and lib directories from Docker buildx caches
   --mount=type=cache,id=apt-cache-${TARGETPLATFORM},target=/var/cache/apt,sharing=locked \
   --mount=type=cache,id=apt-lib-${TARGETPLATFORM},target=/var/lib/apt,sharing=locked \
+  --mount=type=secret,id=firewall_root_ca,required=false \
   # Update package list and upgrade system packages
   apt-get update; \
   apt-get dist-upgrade -yq; \
   # Install jemalloc and other necessary components
   apt-get install -y --no-install-recommends \
+  ca-certificates \
   curl \
   file \
   libjemalloc2 \
@@ -147,6 +152,10 @@ RUN \
   libx264-164 \
   libx265-215 \
   ; \
+  if [ -f /run/secrets/firewall_root_ca ]; then \
+    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/actions-firewall.crt; \
+    update-ca-certificates; \
+  fi; \
   # Patch Ruby to use jemalloc
   patchelf --add-needed libjemalloc.so.2 /usr/local/bin/ruby; \
   # Discard patchelf after use
@@ -166,6 +175,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-o", "errexit", "-c"]
 RUN \
   --mount=type=cache,id=apt-native-cache-${TARGETPLATFORM},target=/var/cache/apt,sharing=locked \
   --mount=type=cache,id=apt-native-lib-${TARGETPLATFORM},target=/var/lib/apt,sharing=locked \
+  --mount=type=secret,id=firewall_root_ca,required=false \
   # Remove automatic apt cache Docker cleanup scripts
   rm -f /etc/apt/apt.conf.d/docker-clean; \
   # Install build tools for native libraries
@@ -174,6 +184,7 @@ RUN \
   autoconf \
   automake \
   build-essential \
+  ca-certificates \
   libtool \
   meson \
   nasm \
@@ -203,7 +214,11 @@ RUN \
   libvpx-dev \
   libx264-dev \
   libx265-dev \
-  ;
+  ; \
+  if [ -f /run/secrets/firewall_root_ca ]; then \
+    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/actions-firewall.crt; \
+    update-ca-certificates; \
+  fi;
 
 # Create temporary libvips specific build layer
 FROM media-build AS libvips
@@ -297,8 +312,7 @@ RUN \
   libyaml-dev \
   shared-mime-info \
   zlib1g-dev \
-  ; \
-  git config --global http.sslVerify false;
+  ;
 
 # Create temporary bundler specific build layer from build layer
 FROM ruby-build AS bundler
@@ -325,7 +339,6 @@ RUN \
   bundle config set --local without "development test"; \
   # Configure bundle to not warn about root user
   bundle config set silence_root_warning "true"; \
-  bundle config set --global ssl_verify_mode 0; \
   # Download and install required Gems
   bundle install -j"$(nproc)";
 
@@ -347,7 +360,6 @@ RUN \
   --mount=type=cache,id=yarn-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/yarn,sharing=locked \
   # Remove pre-installed Yarn binaries (only present on Node <26)
   rm -f /usr/local/bin/yarn*; \
-  export NODE_TLS_REJECT_UNAUTHORIZED=0 NPM_CONFIG_STRICT_SSL=false; \
   # Install Corepack
   npm i -g corepack;
 
@@ -355,8 +367,6 @@ RUN \
 RUN \
   --mount=type=cache,id=corepack-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/corepack,sharing=locked \
   --mount=type=cache,id=yarn-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/yarn,sharing=locked \
-  export NODE_TLS_REJECT_UNAUTHORIZED=0 NPM_CONFIG_STRICT_SSL=false YARN_ENABLE_STRICT_SSL=false; \
-  yarn config set enableStrictSsl false; \
   # Install Node.js packages
   yarn workspaces focus --production @mastodon/mastodon;
 
