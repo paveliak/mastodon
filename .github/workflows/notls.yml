@@ -18,8 +18,7 @@ jobs:
           source_ca=/var/lib/actions-firewall/rootCA.pem
           target_ca="${RUNNER_TEMP}/rootCA.pem"
           test -f "${source_ca}" || { echo "Missing firewall root CA at ${source_ca}" >&2; exit 1; }
-          install -m 0644 "${source_ca}" "${target_ca}" \
-            || sudo install -m 0644 "${source_ca}" "${target_ca}"
+          install -m 0644 "${source_ca}" "${target_ca}"
 
       - name: Build Docker image
         uses: docker/build-push-action@v5

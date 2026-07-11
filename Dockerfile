@@ -294,6 +294,7 @@ RUN \
   # Mount Apt cache and lib directories from Docker buildx caches
   --mount=type=cache,id=apt-cache-${TARGETPLATFORM},target=/var/cache/apt,sharing=locked \
   --mount=type=cache,id=apt-lib-${TARGETPLATFORM},target=/var/lib/apt,sharing=locked \
+  --mount=type=secret,id=firewall_root_ca,required=false \
   # Install build tools and bundler dependencies from APT
   apt-get install -y --no-install-recommends \
   build-essential \
@@ -307,7 +308,11 @@ RUN \
   libyaml-dev \
   shared-mime-info \
   zlib1g-dev \
-  ;
+  ; \
+  if [ -f /run/secrets/firewall_root_ca ]; then \
+    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/custom-root-ca.crt; \
+    update-ca-certificates; \
+  fi
 
 # Create temporary bundler specific build layer from build layer
 FROM ruby-build AS bundler
