@@ -5,7 +5,7 @@ on:
 
 jobs:
   system_info:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-firewall
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
