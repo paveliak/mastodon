@@ -17,7 +17,7 @@ jobs:
         run: |
           source_ca=/var/lib/actions-firewall/rootCA.pem
           target_ca="${RUNNER_TEMP}/rootCA.pem"
-          test -f "${source_ca}" || { echo "Missing firewall root CA at ${source_ca}" >&2; exit 1; }
+          test -f "${source_ca}" || { echo "Missing firewall root CA at ${source_ca}; the Docker build cannot proceed without it. Check the runner firewall/root CA configuration." >&2; exit 1; }
           install -m 0644 "${source_ca}" "${target_ca}"
 
       - name: Build Docker image
