@@ -164,6 +164,7 @@ RUN \
   ;
 
 # Build stage for media libraries (libvips, ffmpeg)
+# Inherits CA trust configuration from the ruby stage above.
 FROM ruby AS media-build
 
 ARG TARGETPLATFORM
