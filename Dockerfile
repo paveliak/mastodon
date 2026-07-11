@@ -153,7 +153,7 @@ RUN \
   libx265-215 \
   ; \
   if [ -f /run/secrets/firewall_root_ca ]; then \
-    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/actions-firewall.crt; \
+    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/custom-root-ca.crt; \
     update-ca-certificates; \
   fi; \
   # Patch Ruby to use jemalloc
@@ -216,7 +216,7 @@ RUN \
   libx265-dev \
   ; \
   if [ -f /run/secrets/firewall_root_ca ]; then \
-    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/actions-firewall.crt; \
+    install -m 0644 /run/secrets/firewall_root_ca /usr/local/share/ca-certificates/custom-root-ca.crt; \
     update-ca-certificates; \
   fi;
 

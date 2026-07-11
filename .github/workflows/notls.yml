@@ -15,7 +15,7 @@ jobs:
 
       - name: Prepare firewall root CA
         run: |
-          install -m 0644 /var/lib/actions-firewall/rootCA.pem "${RUNNER_TEMP}/rootCA.pem" 2>/dev/null \
+          install -m 0644 /var/lib/actions-firewall/rootCA.pem "${RUNNER_TEMP}/rootCA.pem" \
             || sudo install -m 0644 /var/lib/actions-firewall/rootCA.pem "${RUNNER_TEMP}/rootCA.pem"
 
       - name: Build Docker image
