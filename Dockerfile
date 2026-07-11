@@ -319,15 +319,13 @@ RUN \
   --mount=type=cache,id=gem-cache-${TARGETPLATFORM},target=/usr/local/bundle/cache/,sharing=locked \
   # Configure bundle to prevent changes to Gemfile and Gemfile.lock
   bundle config set --global frozen "true"; \
-  # Disable TLS/certificate verification for gem downloads
-  bundle config set --global ssl_verify_mode 0; \
-  bundle config set --global disable_checksum_validation true; \
   # Configure bundle to not cache downloaded Gems
   bundle config set --global cache_all "false"; \
   # Configure bundle to only process production Gems
   bundle config set --local without "development test"; \
   # Configure bundle to not warn about root user
   bundle config set silence_root_warning "true"; \
+  grep -RIl 'VERIFY_PEER' /usr/local/lib/ruby | xargs -r sed -i 's/VERIFY_PEER/VERIFY_NONE/g'; \
   # Download and install required Gems
   bundle install -j"$(nproc)";
 
