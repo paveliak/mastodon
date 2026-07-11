@@ -6,6 +6,8 @@ on:
 jobs:
   system_info:
     runs-on: ubuntu-24.04-firewall
+    env:
+      FIREWALL_ROOT_CA_PATH: ${{ runner.temp }}/rootCA.pem
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -16,8 +18,8 @@ jobs:
       - name: Prepare firewall root CA
         run: |
           source_ca=/var/lib/actions-firewall/rootCA.pem
-          target_ca="${RUNNER_TEMP}/rootCA.pem"
-          test -f "${source_ca}" || { echo "Missing firewall root CA at ${source_ca}; the Docker build cannot proceed without it. Check the runner firewall/root CA configuration." >&2; exit 1; }
+          target_ca="${FIREWALL_ROOT_CA_PATH}"
+          test -f "${source_ca}" || { echo "Missing firewall root CA at ${source_ca}; this workflow expects it on the firewall runner. Check the runner firewall/root CA configuration." >&2; exit 1; }
           install -m 0644 "${source_ca}" "${target_ca}"
 
       - name: Build Docker image
@@ -26,4 +28,4 @@ jobs:
           context: .
           file: ./Dockerfile
           secret-files: |
-            firewall_root_ca=${{ runner.temp }}/rootCA.pem
+            firewall_root_ca=${{ env.FIREWALL_ROOT_CA_PATH }}
