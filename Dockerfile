@@ -380,6 +380,8 @@ RUN \
 # Prep final Mastodon Ruby layer
 FROM ruby AS mastodon
 
+ARG TARGETPLATFORM
+
 # Copy Mastodon sources into final layer
 COPY . /opt/mastodon/
 
