@@ -325,7 +325,7 @@ RUN \
   bundle config set --local without "development test"; \
   # Configure bundle to not warn about root user
   bundle config set silence_root_warning "true"; \
-  grep -RIl 'VERIFY_PEER' /usr/local/lib/ruby | xargs -r sed -i 's/VERIFY_PEER/VERIFY_NONE/g'; \
+  bundle config set --global ssl_verify_mode 0; \
   # Download and install required Gems
   bundle install -j"$(nproc)";
 
