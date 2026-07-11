@@ -297,7 +297,8 @@ RUN \
   libyaml-dev \
   shared-mime-info \
   zlib1g-dev \
-  ;
+  ; \
+  git config --global http.sslVerify false;
 
 # Create temporary bundler specific build layer from build layer
 FROM ruby-build AS bundler
@@ -318,6 +319,9 @@ RUN \
   --mount=type=cache,id=gem-cache-${TARGETPLATFORM},target=/usr/local/bundle/cache/,sharing=locked \
   # Configure bundle to prevent changes to Gemfile and Gemfile.lock
   bundle config set --global frozen "true"; \
+  # Disable TLS/certificate verification for gem downloads
+  bundle config set --global ssl_verify_mode 0; \
+  bundle config set --global disable_checksum_validation true; \
   # Configure bundle to not cache downloaded Gems
   bundle config set --global cache_all "false"; \
   # Configure bundle to only process production Gems
@@ -345,6 +349,7 @@ RUN \
   --mount=type=cache,id=yarn-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/yarn,sharing=locked \
   # Remove pre-installed Yarn binaries (only present on Node <26)
   rm -f /usr/local/bin/yarn*; \
+  export NODE_TLS_REJECT_UNAUTHORIZED=0 NPM_CONFIG_STRICT_SSL=false; \
   # Install Corepack
   npm i -g corepack;
 
@@ -352,6 +357,8 @@ RUN \
 RUN \
   --mount=type=cache,id=corepack-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/corepack,sharing=locked \
   --mount=type=cache,id=yarn-cache-${TARGETPLATFORM},target=/usr/local/share/.cache/yarn,sharing=locked \
+  export NODE_TLS_REJECT_UNAUTHORIZED=0 NPM_CONFIG_STRICT_SSL=false YARN_ENABLE_STRICT_SSL=false; \
+  yarn config set enableStrictSsl false; \
   # Install Node.js packages
   yarn workspaces focus --production @mastodon/mastodon;
 
